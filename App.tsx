@@ -5,7 +5,7 @@ import { AnalysisDashboard } from './components/AnalysisDashboard.tsx';
 import { ChatBot } from './components/ChatBot.tsx';
 import { analyzeVideoContent, analyzeYouTubeVideo } from './services/geminiService.ts';
 import { VideoAnalysis, AppState, VideoSource } from './types.ts';
-import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, KeyRound } from 'lucide-react';
 
 const App: React.FC = () => {
   const [videoSource, setVideoSource] = useState<VideoSource | null>(null);
@@ -70,6 +70,9 @@ const App: React.FC = () => {
     setErrorMsg('');
   };
 
+  // Check if API Key is the default placeholder or missing
+  const isKeyInvalid = !process.env.API_KEY || process.env.API_KEY.includes('AIzaSyBNmDypJHb9mgZsi7zEFswAYJtOHcjWfds');
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-red-500/30">
       {/* Navbar */}
@@ -81,10 +84,30 @@ const App: React.FC = () => {
             </div>
             <span className="font-bold text-xl tracking-tight hidden sm:block">ClipGenius AI</span>
           </div>
+          {isKeyInvalid && (
+            <div className="flex items-center gap-2 text-xs text-yellow-500 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
+              <AlertCircle size={12} />
+              <span>Demo Mode (Key Required)</span>
+            </div>
+          )}
         </div>
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {isKeyInvalid && state === AppState.IDLE && (
+          <div className="mb-8 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-4">
+            <KeyRound className="text-yellow-500 mt-1 flex-shrink-0" size={20} />
+            <div>
+              <h3 className="font-semibold text-yellow-500">API Key Required</h3>
+              <p className="text-sm text-yellow-200/80 mt-1">
+                To use this app, you must update the <code>HARDCODED_KEY</code> in <code>index.html</code> with your own Google Gemini API Key. 
+                <br />
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-white transition-colors">Get a free key here</a>.
+              </p>
+            </div>
+          </div>
+        )}
+
         {state === AppState.IDLE && (
           <Hero onFileSelect={handleFileSelect} onYoutubeSubmit={handleYoutubeSubmit} />
         )}

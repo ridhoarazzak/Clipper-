@@ -52,12 +52,17 @@ const safeJsonParse = (text: string) => {
     return JSON.parse(cleanedText);
   } catch (e) {
     console.error("JSON Parse Error. Raw text:", text);
-    throw new Error("Failed to parse AI response.");
+    throw new Error("Failed to parse AI response. Please try again.");
   }
 };
 
 export const analyzeVideoContent = async (file: File): Promise<VideoAnalysis> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey.includes('AIzaSyBNmDypJHb9mgZsi7zEFswAYJtOHcjWfds')) {
+    throw new Error("Invalid API Key. Please update the HARDCODED_KEY in index.html with your valid Gemini API Key.");
+  }
+  
+  const ai = new GoogleGenAI({ apiKey });
   const videoPart = await fileToGenerativePart(file);
 
   const prompt = `
@@ -88,7 +93,12 @@ export const analyzeVideoContent = async (file: File): Promise<VideoAnalysis> =>
 };
 
 export const analyzeYouTubeVideo = async (url: string): Promise<VideoAnalysis> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey.includes('AIzaSyBNmDypJHb9mgZsi7zEFswAYJtOHcjWfds')) {
+    throw new Error("Invalid API Key. Please update the HARDCODED_KEY in index.html with your valid Gemini API Key.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   const prompt = `
     You are an expert video editor. Analyze this YouTube video: ${url}
     
@@ -124,7 +134,10 @@ export const analyzeYouTubeVideo = async (url: string): Promise<VideoAnalysis> =
 };
 
 export const chatWithVideo = async (source: VideoSource, history: {role: string, parts: {text: string}[]}[], message: string) => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) throw new Error("No API Key found");
+    
+    const ai = new GoogleGenAI({ apiKey });
     let parts: any[] = [];
     
     if (source.type === 'file') {
