@@ -135,8 +135,7 @@ const App: React.FC = () => {
             <div className="lg:col-span-7 space-y-6">
               <div className="sticky top-24 space-y-6">
                  <VideoPlayer source={videoSource} ref={playerRef} />
-                 {/* Pass file only if it exists, otherwise pass just type for context */}
-                 <ChatBot file={videoSource.type === 'file' ? videoSource.file : undefined} /> 
+                 <ChatBot source={videoSource} /> 
               </div>
             </div>
 

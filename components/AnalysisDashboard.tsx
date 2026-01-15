@@ -18,12 +18,13 @@ export const AnalysisDashboard: React.FC<DashboardProps> = ({ analysis, onSeek }
             {analysis.category}
           </span>
         </div>
+        <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-2">Video Description</h3>
         <p className="text-slate-300 leading-relaxed">{analysis.summary}</p>
       </div>
 
       {/* Clips Grid */}
       <h2 className="text-xl font-bold flex items-center gap-2 mt-8 mb-4">
-        <TrendingUp className="text-red-500" /> Viral Clip Suggestions
+        <TrendingUp className="text-red-500" /> 10 Key Highlights
       </h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-4">
@@ -34,7 +35,7 @@ export const AnalysisDashboard: React.FC<DashboardProps> = ({ analysis, onSeek }
           >
             <div className="flex justify-between items-start mb-3">
               <h3 className="font-semibold text-lg text-white group-hover:text-red-400 transition-colors">
-                {clip.title}
+                {index + 1}. {clip.title}
               </h3>
               <div className="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded text-xs text-yellow-500 font-mono">
                 <Award size={12} /> {clip.viralScore}/10

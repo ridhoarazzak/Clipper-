@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { chatWithVideo } from '../services/geminiService';
+import { VideoSource } from '../types';
 
 interface ChatBotProps {
-  file: File;
+  source: VideoSource | null;
 }
 
 interface Message {
@@ -11,7 +12,7 @@ interface Message {
   text: string;
 }
 
-export const ChatBot: React.FC<ChatBotProps> = ({ file }) => {
+export const ChatBot: React.FC<ChatBotProps> = ({ source }) => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([
     { role: 'model', text: 'I have analyzed the video. Ask me anything about specific details, timestamps, or content ideas!' }
@@ -26,7 +27,7 @@ export const ChatBot: React.FC<ChatBotProps> = ({ file }) => {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !source) return;
 
     const userMsg = input;
     setInput('');
@@ -39,7 +40,7 @@ export const ChatBot: React.FC<ChatBotProps> = ({ file }) => {
         parts: [{ text: m.text }]
       }));
       
-      const response = await chatWithVideo(file, history, userMsg);
+      const response = await chatWithVideo(source, history, userMsg);
       setMessages(prev => [...prev, { role: 'model', text: response }]);
     } catch (error) {
       console.error(error);
@@ -81,12 +82,13 @@ export const ChatBot: React.FC<ChatBotProps> = ({ file }) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask about the video..."
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors"
+            placeholder={source ? "Ask about the video..." : "Upload a video to start chat"}
+            disabled={!source}
+            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-purple-500 transition-colors disabled:opacity-50"
           />
           <button
             onClick={handleSend}
-            disabled={isLoading}
+            disabled={isLoading || !source}
             className="p-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors disabled:opacity-50"
           >
             <Send size={18} />
