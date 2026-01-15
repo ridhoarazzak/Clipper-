@@ -15,32 +15,30 @@ const App: React.FC = () => {
   
   const playerRef = useRef<VideoPlayerRef>(null);
 
-  const extractYoutubeId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const handleFileSelect = async (selectedFile: File) => {
-    setVideoSource({ type: 'file', file: selectedFile });
+  const handleFileSelect = async (file: File) => {
+    setVideoSource({ type: 'file', file });
     setState(AppState.ANALYZING);
     setErrorMsg('');
 
     try {
-      const result = await analyzeVideoContent(selectedFile);
+      const result = await analyzeVideoContent(file);
       setAnalysis(result);
       setState(AppState.READY);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setErrorMsg(err.message || "Failed to analyze video. Please try again.");
       setState(AppState.ERROR);
-      setErrorMsg("Failed to analyze video. Ensure the file is not too large (>20MB) and your API key is valid.");
     }
   };
 
   const handleYoutubeSubmit = async (url: string) => {
-    const id = extractYoutubeId(url);
+    // Extract ID
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    const id = (match && match[2].length === 11) ? match[2] : null;
+
     if (!id) {
-      alert("Invalid YouTube URL");
+      setErrorMsg("Invalid YouTube URL");
       return;
     }
 
@@ -52,96 +50,94 @@ const App: React.FC = () => {
       const result = await analyzeYouTubeVideo(url);
       setAnalysis(result);
       setState(AppState.READY);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setErrorMsg(err.message || "Failed to analyze YouTube video. Gemini might not be able to access this specific video's transcripts.");
       setState(AppState.ERROR);
-      setErrorMsg("Failed to analyze YouTube video. The AI might not have found sufficient data via search.");
     }
   };
 
   const handleSeek = (timeStr: string) => {
-    if (playerRef.current) {
-      const [minutes, seconds] = timeStr.split(':').map(Number);
-      const timeInSeconds = minutes * 60 + seconds;
-      playerRef.current.seekTo(timeInSeconds);
-    }
+    const [min, sec] = timeStr.split(':').map(Number);
+    const timeInSeconds = min * 60 + sec;
+    playerRef.current?.seekTo(timeInSeconds);
   };
 
   const handleReset = () => {
     setVideoSource(null);
     setAnalysis(null);
     setState(AppState.IDLE);
+    setErrorMsg('');
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-red-500/30">
       {/* Navbar */}
-      <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-50">
+      <nav className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={handleReset}>
-            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-purple-600 rounded-lg flex items-center justify-center">
-               <span className="font-bold text-white text-lg">C</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-purple-600 rounded-lg flex items-center justify-center font-bold text-white">
+              CG
             </div>
-            <span className="font-bold text-xl hidden sm:block">ClipGenius AI</span>
-          </div>
-          <div className="flex gap-4">
-             {state === AppState.READY && (
-                <button 
-                  onClick={handleReset}
-                  className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
-                >
-                  <RefreshCw size={16} /> New Analysis
-                </button>
-             )}
+            <span className="font-bold text-xl tracking-tight hidden sm:block">ClipGenius AI</span>
           </div>
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {state === AppState.IDLE && (
           <Hero onFileSelect={handleFileSelect} onYoutubeSubmit={handleYoutubeSubmit} />
         )}
 
         {state === AppState.ANALYZING && (
-          <div className="flex flex-col items-center justify-center h-[60vh]">
-            <Loader2 className="animate-spin text-red-500 mb-4" size={48} />
-            <h2 className="text-2xl font-bold mb-2">Analyzing Video Content</h2>
-            <p className="text-slate-400 max-w-md text-center">
-              Gemini is processing the content to extract highlights. This usually takes about 30-60 seconds.
-            </p>
+          <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 text-center animate-in fade-in duration-500">
+            <div className="relative">
+              <div className="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
+              <Loader2 size={64} className="text-red-500 animate-spin relative z-10" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-2">Analyzing Content...</h2>
+              <p className="text-slate-400 max-w-md mx-auto">
+                Gemini is watching your video, extracting transcripts, and identifying the most viral moments. This may take a minute.
+              </p>
+            </div>
           </div>
         )}
 
         {state === AppState.ERROR && (
-          <div className="flex flex-col items-center justify-center h-[60vh]">
-             <div className="bg-red-500/10 border border-red-500/20 p-8 rounded-2xl flex flex-col items-center text-center max-w-lg">
-                <AlertCircle className="text-red-500 mb-4" size={48} />
-                <h3 className="text-xl font-bold text-red-400 mb-2">Analysis Failed</h3>
-                <p className="text-slate-300 mb-6">{errorMsg}</p>
-                <button 
-                  onClick={handleReset}
-                  className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full transition-colors"
-                >
-                  Try Again
-                </button>
-             </div>
+          <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-6 text-center">
+            <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center text-red-500">
+              <AlertCircle size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-white mb-2">Analysis Failed</h2>
+              <p className="text-red-400 max-w-md mx-auto mb-6">{errorMsg}</p>
+              <button 
+                onClick={handleReset}
+                className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors flex items-center gap-2 mx-auto"
+              >
+                <RefreshCw size={16} /> Try Again
+              </button>
+            </div>
           </div>
         )}
 
         {state === AppState.READY && videoSource && analysis && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-bottom-4 duration-500">
             {/* Left Column: Player & Chat */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="sticky top-24 space-y-6">
-                 <VideoPlayer source={videoSource} ref={playerRef} />
-                 <ChatBot source={videoSource} /> 
+            <div className="lg:col-span-2 space-y-6">
+              <VideoPlayer ref={playerRef} source={videoSource} />
+              <div className="hidden lg:block">
+                 <ChatBot source={videoSource} />
               </div>
             </div>
 
-            {/* Right Column: Analysis Results */}
-            <div className="lg:col-span-5">
+            {/* Right Column: Analysis & Clips */}
+            <div className="space-y-6">
               <AnalysisDashboard analysis={analysis} onSeek={handleSeek} />
+              <div className="lg:hidden">
+                <ChatBot source={videoSource} />
+              </div>
             </div>
           </div>
         )}

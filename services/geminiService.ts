@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { VideoAnalysis, VideoSource } from "../types.ts";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 // Helper to convert file to Base64
 export const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: string; mimeType: string } }> => {
   return new Promise((resolve, reject) => {
@@ -47,7 +45,19 @@ const ANALYSIS_SCHEMA = {
   required: ["videoTitle", "summary", "category", "suggestedClips"]
 };
 
+// Helper to safely parse JSON that might be wrapped in markdown code blocks
+const safeJsonParse = (text: string) => {
+  try {
+    const cleanedText = text.replace(/```json\n?|```/g, '').trim();
+    return JSON.parse(cleanedText);
+  } catch (e) {
+    console.error("JSON Parse Error. Raw text:", text);
+    throw new Error("Failed to parse AI response.");
+  }
+};
+
 export const analyzeVideoContent = async (file: File): Promise<VideoAnalysis> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const videoPart = await fileToGenerativePart(file);
 
   const prompt = `
@@ -61,7 +71,7 @@ export const analyzeVideoContent = async (file: File): Promise<VideoAnalysis> =>
   `;
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-latest', 
+    model: 'gemini-3-flash-preview', 
     contents: {
       parts: [videoPart, { text: prompt }]
     },
@@ -74,26 +84,31 @@ export const analyzeVideoContent = async (file: File): Promise<VideoAnalysis> =>
   const text = response.text;
   if (!text) throw new Error("No response from Gemini");
   
-  return JSON.parse(text) as VideoAnalysis;
+  return safeJsonParse(text) as VideoAnalysis;
 };
 
 export const analyzeYouTubeVideo = async (url: string): Promise<VideoAnalysis> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = `
-    You are an expert video editor. I want you to analyze this YouTube video: ${url}
+    You are an expert video editor. Analyze this YouTube video: ${url}
     
-    Since you cannot watch the video directly, use the Google Search tool to find its transcript, description, reviews, or summaries to understand its content.
-    Based on the information you find:
-    1. Provide the actual or a catchy title.
-    2. Write a detailed description/summary of what happens in the video.
+    Use Google Search to find its transcript, description, reviews, or summaries.
+    
+    TASK:
+    1. Provide a catchy title.
+    2. Write a detailed summary.
     3. Categorize it.
-    4. Suggest exactly 10 viral clips or important key points. Estimate timestamps (MM:SS) based on the typical flow of such videos or specific mentioned moments in your search results.
+    4. Suggest exactly 10 viral clips.
     
-    Return the result strictly in JSON format.
+    CRITICAL INSTRUCTION:
+    Since you cannot watch the video directly, if you cannot find exact timestamps, YOU MUST ESTIMATE THEM based on the typical flow of this type of content. 
+    Do NOT return an error saying you can't find the video. Create the best possible analysis based on available metadata and your knowledge of the topic.
+    
+    Return the result strictly in valid JSON format matching the schema.
   `;
 
-  // We use gemini-2.5-flash-latest as it supports search grounding well.
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-latest',
+    model: 'gemini-3-flash-preview',
     contents: { text: prompt },
     config: {
       tools: [{ googleSearch: {} }],
@@ -105,10 +120,11 @@ export const analyzeYouTubeVideo = async (url: string): Promise<VideoAnalysis> =
   const text = response.text;
   if (!text) throw new Error("No response from Gemini");
   
-  return JSON.parse(text) as VideoAnalysis;
+  return safeJsonParse(text) as VideoAnalysis;
 };
 
 export const chatWithVideo = async (source: VideoSource, history: {role: string, parts: {text: string}[]}[], message: string) => {
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     let parts: any[] = [];
     
     if (source.type === 'file') {
@@ -121,7 +137,7 @@ export const chatWithVideo = async (source: VideoSource, history: {role: string,
     }
 
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-latest',
+        model: 'gemini-3-flash-preview',
         contents: { parts },
         config: {
             // Enable search for YouTube chat context if needed
