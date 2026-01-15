@@ -28,11 +28,16 @@
       }
     </style>
     <script>
+      // --- PENGATURAN API KEY ---
+      // Jika Anda ingin memasukkan API Key secara permanen, ganti '' di bawah ini dengan key Anda.
+      // Contoh: const HARDCODED_KEY = 'AIzaSy...';
+      const HARDCODED_KEY = ''; 
+
       // Polyfill process.env
       if (typeof process === 'undefined') {
-        window.process = { env: { API_KEY: 'YOUR_API_KEY_HERE' } }; // User will need to replace this in the file if hosting statically
+        window.process = { env: { API_KEY: HARDCODED_KEY } };
       } else if (!process.env) {
-        process.env = { API_KEY: 'YOUR_API_KEY_HERE' };
+        process.env = { API_KEY: HARDCODED_KEY };
       }
     </script>
     <!-- Babel Standalone for in-browser compilation -->
