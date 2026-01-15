@@ -1,0 +1,5 @@
+{
+  "name": "ClipGenius AI",
+  "description": "An intelligent video repurposing tool that uses Gemini to analyze videos, generate summaries, and suggest viral clips for social media.",
+  "requestFramePermissions": []
+}
