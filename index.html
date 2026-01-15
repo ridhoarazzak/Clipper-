@@ -28,11 +28,11 @@
       }
     </style>
     <script>
-      // Polyfill process.env if it doesn't exist to prevent crashes
+      // Polyfill process.env
       if (typeof process === 'undefined') {
-        window.process = { env: { API_KEY: '' } };
+        window.process = { env: { API_KEY: 'YOUR_API_KEY_HERE' } }; // User will need to replace this in the file if hosting statically
       } else if (!process.env) {
-        process.env = { API_KEY: '' };
+        process.env = { API_KEY: 'YOUR_API_KEY_HERE' };
       }
     </script>
     <!-- Babel Standalone for in-browser compilation -->
@@ -58,7 +58,7 @@
         Loading application...
       </div>
     </div>
-    <!-- Note: type="text/babel" and data-type="module" allow Babel to process this -->
+    <!-- Load the main application logic -->
     <script type="text/babel" data-type="module" data-presets="react,typescript" src="./index.tsx"></script>
   </body>
 </html>
