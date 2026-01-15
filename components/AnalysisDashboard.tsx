@@ -1,5 +1,5 @@
 import React from 'react';
-import { VideoAnalysis, SuggestedClip } from '../types';
+import { VideoAnalysis, SuggestedClip } from '../types.ts';
 import { Play, Hash, Award, TrendingUp, Scissors } from 'lucide-react';
 
 interface DashboardProps {

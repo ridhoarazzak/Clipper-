@@ -1,10 +1,10 @@
 import React, { useState, useRef } from 'react';
-import { Hero } from './components/Hero';
-import { VideoPlayer, VideoPlayerRef } from './components/VideoPlayer';
-import { AnalysisDashboard } from './components/AnalysisDashboard';
-import { ChatBot } from './components/ChatBot';
-import { analyzeVideoContent, analyzeYouTubeVideo } from './services/geminiService';
-import { VideoAnalysis, AppState, VideoSource } from './types';
+import { Hero } from './components/Hero.tsx';
+import { VideoPlayer, VideoPlayerRef } from './components/VideoPlayer.tsx';
+import { AnalysisDashboard } from './components/AnalysisDashboard.tsx';
+import { ChatBot } from './components/ChatBot.tsx';
+import { analyzeVideoContent, analyzeYouTubeVideo } from './services/geminiService.ts';
+import { VideoAnalysis, AppState, VideoSource } from './types.ts';
 import { Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 const App: React.FC = () => {

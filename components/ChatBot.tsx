@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2 } from 'lucide-react';
-import { chatWithVideo } from '../services/geminiService';
-import { VideoSource } from '../types';
+import { chatWithVideo } from '../services/geminiService.ts';
+import { VideoSource } from '../types.ts';
 
 interface ChatBotProps {
   source: VideoSource | null;

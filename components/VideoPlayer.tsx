@@ -1,5 +1,5 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
-import { VideoSource } from '../types';
+import { VideoSource } from '../types.ts';
 
 interface VideoPlayerProps {
   source: VideoSource;
